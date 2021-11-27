@@ -7,11 +7,14 @@ var colors
 
 var a1
 var font, titleY, titleYA
-var game, seconds, player, terrain
-var minute, second
+var game, seconds = 0, player, terrain = [4, 4, 4, 4], car_lanes, boat_lanes
+var next_car=1, next_boat=1
+var car, boat
+var cars, boats
+var mins, secs
 
 var display
-var i=0, j=0;
+var i=0, j=0, k, y_, j_;
 /*
 display:
 0  Main menu
@@ -21,7 +24,7 @@ display:
 4  Game over
 queue
 */
-colors = ["#888898", "#888898", "#43DE3B", "#43DE3B", "#43DE3B", "#28A9FF"]
+var colors = ["#888898", "#888898", "#888898", "#43DE3B", "#43DE3B", "#28A9FF"]
 
 function  preload() {
   b1 = loadImage("assets/b1.png")
@@ -33,6 +36,7 @@ function  preload() {
   m2 = loadImage("assets/m2.png")
 
   c1 = loadImage("assets/c1.png")
+  c2 = loadImage("assets/c2.png")
 
   a1 = loadSound("assets/a1.mp3")
   font = loadFont("assets/font.ttf")
@@ -42,6 +46,8 @@ function setup() {
   createCanvas(1200, 600);
 
   button1 = new Button(600, 200, b1, true)
+  button2 = new Button(1120, 520, b2, false)
+  button3 = new Button(660, 300, b3, false)
   button4 = new Button(1120, 520, b4, false)
 
   mode1 = new Button(540, 300, m1, false)
@@ -52,9 +58,7 @@ function setup() {
   player.visible = false
   player.scale=0.6
 
-  seconds = 0
-  terrain = []
-  for (i; i<=7; i++) {
+  for (i; i<=14; i++) {
     terrain.push(Math.floor(random(0,6)))
   }
 
@@ -64,11 +68,14 @@ function setup() {
   titleYA = 2
   fill(255)
 
+  cars = new Group()
+
   display = 0
   textAlign(CENTER)
 }
 
 function draw() {
+  console.log(camera.position.y)
   if (display != 2) {
     background(0);
   }
@@ -79,6 +86,9 @@ function draw() {
 }
 
 function caller() {
+  if (display == 2) {
+    game.run()
+  }
   if (display == 0) {
     button1.setVisibility(true)
     title_()
@@ -91,13 +101,30 @@ function caller() {
     mode1_()
     mode2_()
   } else if (display == 2) {
-    button4.setVisibility(true)
-    button4_()
-    game.run()
+    button2.setVisibility(true)
+    button2_()
     game.displayTimer()
     game.displayScore()
   } else if (display == 3) {
+    exit_()
+  } else if (display == 4) {
+    over_()
   }
+}
+
+function exit_() {
+  textSize(60)
+  text("Are you sure you want to quit?", 600, 80)
+  button3_()
+  button4_()
+}
+
+function over_() {
+  textSize(80)
+  text("Game over", 600, 80)
+  textSize(40)
+  text("Unfortunately, the character has experienced a car crash.", 600, 160)
+  button4.reposition(600, 520)
 }
 
 function title_() {
@@ -114,19 +141,60 @@ function title_() {
   text("Crossy Road", 600, titleY)
 }
 
+function pause() {
+  camera.position.y = 300
+  console.log(camera.position.y)
+  player.visible = false
+  cars.visible = false
+  button4.setVisibility(true)
+  button2.setVisibility(false)
+  for (k of cars) {
+    k.visible = false
+    k.setSpeed(0)
+  }
+}
+
 function button1_() {
   if (button1.mousePressed()) {
     button1.setVisibility(false)
+    button4.reposition(1120, 520)
     display = 1
+  }
+}
+
+function button2_() {
+  if (button2.mousePressed()) {
+    display = 3
+    button4.reposition(540, 300)
+    button3.setVisibility(true)
+    pause()
+  }
+}
+
+function button3_() {
+  if (button3.mousePressed()) {
+    button3.setVisibility(false)
+    button4.setVisibility(false)
+    display = 0
+    clearInterval(game.int_id)
+    game = null
+    seconds = 0
   }
 }
 
 function button4_() {
   if (button4.mousePressed()) {
-    if (display == 2) {
-      //button4.setVisibility(false)
-      //display = 0
-    } else if (display == 1) {
+    if (display == 3) {
+      display = 2
+      player.visible = true
+      for (k of cars) {
+        k.visible = true
+        k.setSpeed(10)
+      }
+      button3.setVisibility(false)
+      button4.setVisibility(false)
+      button2.setVisibility(true)
+    } else {
       button4.setVisibility(false)
       mode1.setVisibility(false)
       mode2.setVisibility(false)
@@ -139,6 +207,8 @@ function mode1_() {
   if (mode1.mousePressed()) {
     mode1.setVisibility(false)
     mode2.setVisibility(false)
+    button4.setVisibility(false)
+    button2.setVisibility(true)
     display = 2
     game = new Game("T")
   }
@@ -148,6 +218,8 @@ function mode2_() {
   if (mode2.mousePressed()) {
     mode1.setVisibility(false)
     mode2.setVisibility(false)
+    button4.setVisibility(false)
+    button2.setVisibility(true)
     display = 2
     game = new Game("I")
   }

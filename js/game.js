@@ -1,6 +1,6 @@
 class Game {
   constructor(mode) {
-    setInterval(() => {seconds ++}, 1000)
+    this.int_id = setInterval(() => {if (display == 2) {seconds ++}}, 1000)
     player.visible = true
 
     if (mode == "T") {
@@ -11,29 +11,50 @@ class Game {
   displayTimer() {
     fill(255)
     textSize(30)
-    minute = String(Math.floor(seconds/60)).padStart(2, '0')
-    second = String(seconds % 60)          .padStart(2, '0')
-    text(minute+":"+second, 1150, camera.position.y-270)
+    mins = String(Math.floor(seconds/60)).padStart(2, '0')
+    secs = String(seconds % 60)          .padStart(2, '0')
+    text(mins+":"+secs, 1150, camera.position.y-270)
   }
 
   displayScore() {
     fill(255)
     textSize(30)
-    text(score, 20, camera.position.y-270)
-    text(max_score, 150, camera.position.y-270)
+    text(score, 50, camera.position.y-270)
+    text(max_score, 180, camera.position.y-270)
   }
 
   run() {
     background(0);
-    for (j=0; j<=7; j++) {
-      fill(colors[terrain[j]])
-      rect(0, (5-j)*100+camera.position.y, 1201, -101)
+    car_lanes  = []
+    boat_lanes = []
+    for (j=0; j<=18; j++) {
+      j_ = terrain[j]
+      y_ = (5-j)*100+camera.position.y
+      fill(colors[j_])
+      rect(0, y_, 1201, -101)
+      if ([0, 1, 2].includes(j_)) {
+        car_lanes.push(y_-50)
+      } else if (j_ == 5) {
+        boat_lanes.push(y_)
+      }
     }
     this.checkKeys()
     camera.position.y = Math.min(600-max_score*100, 300)
-    drawSprites()
-    button4.reposition(1120, camera.position.y+220)
 
+    this.make_cars()
+    drawSprites()
+    button2.reposition(1120, camera.position.y+220)
+  }
+
+  make_cars() {
+    if (seconds >= next_car) {
+      car = createSprite(-150, car_lanes[Math.floor(random(0, car_lanes.length))])
+      car.addImage(c2)
+      car.scale = 0.6
+      car.setSpeed(10, 0)
+      cars.add(car)
+      next_car += 5/(car_lanes.length**1.15)
+    }
   }
 
   checkKeys() {
@@ -44,7 +65,6 @@ class Game {
         max_score = score
         terrain.push(Math.floor(random(0,6)))
         terrain.shift()
-        console.log(terrain)
       }
     }
     if (keyWentDown("DOWN") && player.y < (850-max_score*100)) {
@@ -57,6 +77,10 @@ class Game {
     if (keyWentDown("RIGHT")) {
       player.x = Math.min(player.x + 100, 1100)
     }
+    player.overlap(cars, () => {
+      pause()
+      display = 4
+    })
   }
 
 }
