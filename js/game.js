@@ -1,7 +1,15 @@
 class Game {
   constructor(mode) {
     this.int_id = setInterval(() => {if (display == 2) {seconds ++}}, 1000)
+    camera.position.y = 300
     player.visible = true
+    player.x = 600
+    player.y = 550
+    score = 0
+    max_score = 0
+    seconds = 0
+    last_cars = {}
+    last_boats = {}
 
     if (mode == "T") {
       // End at 05:00
@@ -34,26 +42,52 @@ class Game {
       rect(0, y_, 1201, -101)
       if ([0, 1, 2].includes(j_)) {
         car_lanes.push(y_-50)
+        if (last_cars[y_-50] == undefined) {
+          last_cars[y_-50] = 0
+        }
       } else if (j_ == 5) {
-        boat_lanes.push(y_)
+        boat_lanes.push(y_-50)
+        if (last_boats[y_-50] == undefined) {
+          last_boats[y_-50] = 0
+        }
       }
     }
     this.checkKeys()
     camera.position.y = Math.min(600-max_score*100, 300)
 
     this.make_cars()
+    this.make_boats()
     drawSprites()
     button2.reposition(1120, camera.position.y+220)
   }
 
   make_cars() {
-    if (seconds >= next_car) {
-      car = createSprite(-150, car_lanes[Math.floor(random(0, car_lanes.length))])
-      car.addImage(c2)
-      car.scale = 0.6
-      car.setSpeed(10, 0)
-      cars.add(car)
-      next_car += 5/(car_lanes.length**1.15)
+    for (var i=0; i<car_lanes.length; i++) {
+      if (Math.floor(random(0, 50)) == 0 && seconds - last_cars[car_lanes[i]] > 1) {
+        car = createSprite(-150, car_lanes[i])
+        car.depth = 0
+        car.addImage(c2)
+        car.scale = 0.6
+        car.setSpeed(10, 0)
+        car.life = 170
+        cars.add(car)
+        last_cars[car_lanes[i]] = seconds
+      }
+    }
+  }
+
+  make_boats() {
+    for (var i=0; i<boat_lanes.length; i++) {
+      if (Math.floor(random(0, 40)) == 0 && seconds - last_boats[boat_lanes[i]] > 2) {
+        boat = createSprite(-150, boat_lanes[i])
+        boat.depth = 0
+        boat.addImage(c3)
+        boat.scale = 0.6
+        boat.setSpeed(5, 0)
+        boat.life = 320
+        boats.add(boat)
+        last_boats[boat_lanes[i]] = seconds
+      }
     }
   }
 
@@ -65,6 +99,8 @@ class Game {
         max_score = score
         terrain.push(Math.floor(random(0,6)))
         terrain.shift()
+        delete last_cars[player.y+100]
+        delete last_boats[player.y+100]
       }
     }
     if (keyWentDown("DOWN") && player.y < (850-max_score*100)) {
@@ -79,6 +115,8 @@ class Game {
     }
     player.overlap(cars, () => {
       pause()
+      cars.destroyEach()
+      boats.destroyEach()
       display = 4
     })
   }

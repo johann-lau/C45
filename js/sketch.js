@@ -1,4 +1,4 @@
-var b1, b2, b3, b4, m1, m2, c1
+var b1, b2, b3, b4, m1, m2, c1, c2, c3
 var button1, button2, button3, button4
 var mode1, mode2
 
@@ -8,9 +8,8 @@ var colors
 var a1
 var font, titleY, titleYA
 var game, seconds = 0, player, terrain = [4, 4, 4, 4], car_lanes, boat_lanes
-var next_car=1, next_boat=1
-var car, boat
-var cars, boats
+var last_cars = {}, last_boats = {}
+var car, boat, cars, boats
 var mins, secs
 
 var display
@@ -37,6 +36,7 @@ function  preload() {
 
   c1 = loadImage("assets/c1.png")
   c2 = loadImage("assets/c2.png")
+  c3 = loadImage("assets/c3.png")
 
   a1 = loadSound("assets/a1.mp3")
   font = loadFont("assets/font.ttf")
@@ -69,13 +69,13 @@ function setup() {
   fill(255)
 
   cars = new Group()
+  boats = new Group()
 
   display = 0
   textAlign(CENTER)
 }
 
 function draw() {
-  console.log(camera.position.y)
   if (display != 2) {
     background(0);
   }
@@ -109,6 +109,7 @@ function caller() {
     exit_()
   } else if (display == 4) {
     over_()
+    button4_()
   }
 }
 
@@ -120,6 +121,7 @@ function exit_() {
 }
 
 function over_() {
+  camera.position.y = 300
   textSize(80)
   text("Game over", 600, 80)
   textSize(40)
@@ -143,12 +145,14 @@ function title_() {
 
 function pause() {
   camera.position.y = 300
-  console.log(camera.position.y)
   player.visible = false
-  cars.visible = false
   button4.setVisibility(true)
   button2.setVisibility(false)
   for (k of cars) {
+    k.visible = false
+    k.setSpeed(0)
+  }
+  for (k of boats) {
     k.visible = false
     k.setSpeed(0)
   }
@@ -184,22 +188,27 @@ function button3_() {
 
 function button4_() {
   if (button4.mousePressed()) {
-    if (display == 3) {
+    if (display == 4) {
+      display = 0
+    } else if (display == 3) {
       display = 2
       player.visible = true
       for (k of cars) {
         k.visible = true
         k.setSpeed(10)
       }
+      for (k of boats) {
+        k.visible = true
+        k.setSpeed(5)
+      }
       button3.setVisibility(false)
-      button4.setVisibility(false)
       button2.setVisibility(true)
     } else {
-      button4.setVisibility(false)
       mode1.setVisibility(false)
       mode2.setVisibility(false)
       display = 0
     }
+    button4.setVisibility(false)
   }
 }
 
